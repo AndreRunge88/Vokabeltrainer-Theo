@@ -45,7 +45,7 @@ textarea{min-height:90px;resize:vertical}.add{background:#4caf73;color:#fff;widt
 <div class="stat"><b id="statPracticed">0</b><span>Vokabeln geübt</span></div>
 <div class="stat"><b id="statCorrect">0</b><span>richtig</span></div>
 <div class="stat"><b id="statWrong">0</b><span>falsch</span></div>
-<div class="stat"><b id="statRate">0 %</b><span>Trefferquote</span></div>
+<div class="stat"><b id="statRate">0 %</b><span>Trefferquote</span></div><div class="stat"><b id="statVocabulary">0</b><span>Vokabeln eingepflegt</span></div>
 </div>
 <p class="hint" id="statRounds">Runden: 0</p>
 <p class="hint">Die offiziellen Schulvokabeln werden zentral gepflegt. Neue Vokabeln kannst du mir einfach als Foto hier im Chat schicken – ich ergänze sie zentral.</p>
@@ -82,7 +82,7 @@ function checkAnswer(answer){if(locked)return;locked=true;document.querySelector
 function next(){if(index<batch.length-1){index++;state.currentIndex=index;state.currentPoints=points;state.currentHearts=hearts;save();showQuestion();return}state.currentBatch=null;state.currentIndex=0;state.currentPoints=0;state.currentHearts=3;save();el("bar").style.width="100%";el("word").textContent="🏆 Runde geschafft!";el("answers").innerHTML="";el("feedback").innerHTML="Du hast <b>"+points+" Punkte</b> gesammelt!";el("next").textContent=state.seen<getAll().length?"➡️ Nächste 10":"🔁 Fehlertraining";el("next").onclick=function(){el("next").onclick=next;startRound()}}
 function saveAll(){localStorage.setItem("vocabKids",JSON.stringify(state));localStorage.setItem("vocabCustom",JSON.stringify(customWords))}
 function showNotice(t){el("notice").textContent=t;el("notice").style.display="block";setTimeout(()=>el("notice").style.display="none",2500)}
-function updateStats(){const s=state.stats||{practiced:0,correct:0,wrong:0};el("statPracticed").textContent=s.practiced;el("statCorrect").textContent=s.correct;el("statWrong").textContent=s.wrong;el("statRate").textContent=s.practiced?Math.round(s.correct/s.practiced*100)+" %":"0 %";el("statRounds").textContent="Runden: "+state.round}
+function updateStats(){const s=state.stats||{practiced:0,correct:0,wrong:0};el("statVocabulary").textContent=getAll().length;el("statPracticed").textContent=s.practiced;el("statCorrect").textContent=s.correct;el("statWrong").textContent=s.wrong;el("statRate").textContent=s.practiced?Math.round(s.correct/s.practiced*100)+" %":"0 %";el("statRounds").textContent="Runden: "+state.round}
 function renderCustom(){const box=el("customList");box.innerHTML="";if(!customWords.length){box.innerHTML='<div class="hint">Noch keine eigenen Vokabeln hinzugefügt.</div>';return}customWords.forEach(function(w,i){const row=document.createElement("div");row.className="item";const span=document.createElement("span");span.textContent=w[0]+" = "+w[1];const b=document.createElement("button");b.className="del";b.textContent="Löschen";b.onclick=function(){customWords.splice(i,1);saveAll();renderCustom();showNotice("Vokabel gelöscht.")};row.appendChild(span);row.appendChild(b);box.appendChild(row)})}
 async function loadVocabulary(){
  try{const res=await fetch("vocab.json?v="+Date.now(),{cache:"no-store"});if(!res.ok)throw new Error("HTTP "+res.status);const data=await res.json();if(Array.isArray(data)&&data.length)remoteWords=data}catch(e){}
