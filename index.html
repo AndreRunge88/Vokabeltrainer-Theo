@@ -99,7 +99,12 @@ async function loadVocabulary(){
  try{state=JSON.parse(localStorage.getItem("vocabKids")||"null")}catch(e){state=null}
  if(!state)state={seen:0,wrong:[],round:0,stats:{practiced:0,correct:0,wrong:0}};
  if(!state.stats)state.stats={practiced:0,correct:0,wrong:0};
- showQuestionOrStart()
+ const navType=(performance.getEntriesByType("navigation")[0]||{}).type;
+ if(navType==="navigate"){
+   showModeSelection();
+ }else{
+   showQuestionOrStart();
+ }
 }
 function showQuestionOrStart(){
  if(state.currentBatch && Array.isArray(state.currentBatch) && state.currentIndex < state.currentBatch.length){
