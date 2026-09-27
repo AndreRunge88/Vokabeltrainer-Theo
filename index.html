@@ -165,6 +165,8 @@ el("adminOpen").onclick=function(){const pin=prompt("🔐 Eltern-PIN eingeben:")
 el("adminClose").onclick=function(){el("adminPanel").classList.remove("show")}
 el("resetStats").onclick=function(){if(confirm("Lernstand und Statistik wirklich auf Anfang setzen?")){state={seen:0,wrong:[],round:0,stats:{practiced:0,correct:0,wrong:0},sessions:[],currentBatch:null,currentIndex:0,currentPoints:0,currentHearts:3,currentDirection:direction};save();batch=[];index=0;points=0;hearts=3;showNotice("Lernstand zurückgesetzt.");setTimeout(startRound,300)}}
 el("next").onclick=next;
+el("chooseEnDe").onclick=function(){startSelectedRound("en-de")};
+el("chooseDeEn").onclick=function(){startSelectedRound("de-en")};
 const oldCheck=checkAnswer;
 loadVocabulary();
 </script>
