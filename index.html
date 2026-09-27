@@ -62,6 +62,14 @@ textarea{min-height:90px;resize:vertical}.add{background:#4caf73;color:#fff;widt
 <div id="sessionHistory"></div>
 </div>
 <p class="hint">Die offiziellen Schulvokabeln werden zentral gepflegt. Neue Vokabeln kannst du mir einfach als Foto hier im Chat schicken – ich ergänze sie zentral.</p>
+<p class="hint"><b>Neue Schulvokabeln</b></p>
+<button class="add" id="photoUploadBtn" type="button">📸 Neue Vokabeln als Foto auswählen</button>
+<input id="photoInput" type="file" accept="image/*" capture="environment" style="display:none">
+<div id="photoPreview" style="display:none;margin-top:10px">
+<img id="photoImage" alt="Ausgewähltes Vokabelfoto" style="width:100%;max-height:420px;object-fit:contain;border-radius:14px;background:#f5f7fa">
+<p class="hint" style="margin-top:8px">Das Foto ist hier nur als Vorschau auf diesem Gerät sichtbar. Für die zentrale Aufnahme der neuen Vokabeln bitte das Foto anschließend hier im Chat hochladen.</p>
+<button class="close" id="openChatBtn" type="button">💬 ChatGPT öffnen</button>
+</div>
 <p class="hint"><b>Eigene Vokabeln</b> kannst du zusätzlich direkt auf diesem Gerät eintragen.</p>
 <input id="eng" placeholder="Englisch, z. B. apple">
 <input id="ger" placeholder="Deutsch, z. B. Apfel">
@@ -139,6 +147,14 @@ function showQuestionOrStart(){
 }
 function persistCurrent(){state.currentBatch=batch;state.currentIndex=index;state.currentPoints=points;state.currentHearts=hearts;save()}
 function addCustom(en,de){en=en.trim();de=de.trim();if(!en||!de){showNotice("Bitte Englisch und Deutsch eintragen.");return false}if(getAll().some(w=>norm(w[0])===norm(en))){showNotice("Diese Vokabel gibt es schon.");return false}customWords.push([en,de]);saveAll();renderCustom();showNotice("Vokabel hinzugefügt! 🎉");return true}
+el("photoUploadBtn").onclick=function(){el("photoInput").click()};
+el("photoInput").onchange=function(){
+ const file=this.files&&this.files[0]; if(!file)return;
+ const url=URL.createObjectURL(file);
+ el("photoImage").src=url;
+ el("photoPreview").style.display="block";
+};
+el("openChatBtn").onclick=function(){window.open("https://chatgpt.com/","_blank")};
 el("addOne").onclick=function(){if(addCustom(el("eng").value,el("ger").value)){el("eng").value="";el("ger").value=""}}
 el("addBulk").onclick=function(){const lines=el("bulk").value.split(/\n/);let n=0;lines.forEach(line=>{const parts=line.split(/\s*=\s*/);if(parts.length>=2&&addCustom(parts[0],parts.slice(1).join("=")))n++});el("bulk").value="";if(n)showNotice(n+" Vokabel(n) hinzugefügt! 🎉")}
 el("refreshPage").onclick=function(){location.reload()};
