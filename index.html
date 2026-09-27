@@ -38,6 +38,7 @@ textarea{min-height:90px;resize:vertical}.add{background:#4caf73;color:#fff;widt
 <button class="next" id="next">Weiter ➜</button>
 <div class="score" id="done"></div>
 <div class="small">10 Vokabeln pro Runde · Fehler kommen später wieder.<br>Der Lernstand bleibt auch beim Aktualisieren erhalten.</div>
+<button class="adminBtn" id="refreshPage">🔄 Seite aktualisieren</button>
 <button class="adminBtn" id="adminOpen">🔐 Elternbereich</button>
 <div class="panel" id="adminPanel">
 <h2>👨‍👩‍👦 Elternbereich</h2>
@@ -102,6 +103,7 @@ function persistCurrent(){state.currentBatch=batch;state.currentIndex=index;stat
 function addCustom(en,de){en=en.trim();de=de.trim();if(!en||!de){showNotice("Bitte Englisch und Deutsch eintragen.");return false}if(getAll().some(w=>norm(w[0])===norm(en))){showNotice("Diese Vokabel gibt es schon.");return false}customWords.push([en,de]);saveAll();renderCustom();showNotice("Vokabel hinzugefügt! 🎉");return true}
 el("addOne").onclick=function(){if(addCustom(el("eng").value,el("ger").value)){el("eng").value="";el("ger").value=""}}
 el("addBulk").onclick=function(){const lines=el("bulk").value.split(/\n/);let n=0;lines.forEach(line=>{const parts=line.split(/\s*=\s*/);if(parts.length>=2&&addCustom(parts[0],parts.slice(1).join("=")))n++});el("bulk").value="";if(n)showNotice(n+" Vokabel(n) hinzugefügt! 🎉")}
+el("refreshPage").onclick=function(){location.reload()};
 el("adminOpen").onclick=function(){const pin=prompt("🔐 Eltern-PIN eingeben:");if(pin==="2705"){el("adminPanel").classList.add("show");renderCustom();updateStats()}else if(pin!==null)alert("❌ Falsche PIN")}
 el("adminClose").onclick=function(){el("adminPanel").classList.remove("show")}
 el("resetStats").onclick=function(){if(confirm("Lernstand und Statistik wirklich auf Anfang setzen?")){state={seen:0,wrong:[],round:0,stats:{practiced:0,correct:0,wrong:0},currentBatch:null,currentIndex:0,currentPoints:0,currentHearts:3};save();batch=[];index=0;points=0;hearts=3;showNotice("Lernstand zurückgesetzt.");setTimeout(startRound,300)}}
