@@ -131,11 +131,12 @@ async function loadVocabulary(){
  try{state=JSON.parse(localStorage.getItem("vocabKids")||"null")}catch(e){state=null}
  if(!state)state={seen:0,wrong:[],round:0,stats:{practiced:0,correct:0,wrong:0}};
  if(!state.stats)state.stats={practiced:0,correct:0,wrong:0};
- const navType=(performance.getEntriesByType("navigation")[0]||{}).type;
- if(navType==="navigate"){
-   showModeSelection();
- }else{
+ const resume=sessionStorage.getItem("vocabResume")==="1";
+ sessionStorage.removeItem("vocabResume");
+ if(resume && state.currentBatch && Array.isArray(state.currentBatch) && state.currentIndex < state.currentBatch.length){
    showQuestionOrStart();
+ }else{
+   showModeSelection();
  }
 }
 function showQuestionOrStart(){
@@ -157,7 +158,7 @@ el("photoInput").onchange=function(){
 el("openChatBtn").onclick=function(){window.open("https://chatgpt.com/c/6ab8e047-ab6c-83eb-afb8-d48b90b71f5c","_blank")};
 el("addOne").onclick=function(){if(addCustom(el("eng").value,el("ger").value)){el("eng").value="";el("ger").value=""}}
 el("addBulk").onclick=function(){const lines=el("bulk").value.split(/\n/);let n=0;lines.forEach(line=>{const parts=line.split(/\s*=\s*/);if(parts.length>=2&&addCustom(parts[0],parts.slice(1).join("=")))n++});el("bulk").value="";if(n)showNotice(n+" Vokabel(n) hinzugefügt! 🎉")}
-el("refreshPage").onclick=function(){location.reload()};
+el("refreshPage").onclick=function(){sessionStorage.setItem("vocabResume","1");location.reload()};
 el("modeToggle").onclick=function(){showModeSelection()};
 el("modeLabel").textContent=direction==="en-de"?"Englisch 🇬🇧 → Deutsch 🇩🇪":"Deutsch 🇩🇪 → Englisch 🇬🇧";el("modeToggle").textContent=direction==="en-de"?"🔄 Deutsch → Englisch üben":"🔄 Englisch → Deutsch üben";
 el("adminOpen").onclick=function(){const pin=prompt("🔐 Eltern-PIN eingeben:");if(pin==="2705"){el("adminPanel").classList.add("show");renderCustom();updateStats()}else if(pin!==null)alert("❌ Falsche PIN")}
