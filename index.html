@@ -34,8 +34,8 @@ textarea{min-height:90px;resize:vertical}.add{background:#4caf73;color:#fff;widt
 <div id="modeSelect" style="display:none;text-align:center;margin:20px 0">
 <h2 style="margin-bottom:10px">🎯 Wie möchtest du üben?</h2>
 <p class="hint">Wähle eine Richtung für die nächsten 10 Vokabeln.</p>
-<button id="chooseEnDe" onclick="startSelectedRound('en-de')" style="width:100%;margin-bottom:10px">🇬🇧 Englisch → Deutsch</button>
-<button id="chooseDeEn" onclick="startSelectedRound('de-en')" style="width:100%">🇩🇪 Deutsch → Englisch</button>
+<button id="chooseEnDe" type="button" style="width:100%;margin-bottom:10px">🇬🇧 Englisch → Deutsch</button>
+<button id="chooseDeEn" type="button" style="width:100%">🇩🇪 Deutsch → Englisch</button>
 </div>
 <div class="q" id="questionLabel">Was bedeutet:</div>
 <div class="word" id="word">Lade Vokabel...</div>
@@ -94,6 +94,8 @@ function norm(x){return String(x).toLowerCase().trim().replace(/[.,!?]/g,"").rep
 function shuffle(a){return a.sort(function(){return Math.random()-.5})}
 function showModeSelection(){el("modeSelect").style.display="block";el("questionLabel").style.display="none";el("word").style.display="none";el("answers").style.display="none";el("hearts").style.display="none";el("feedback").style.display="none";el("next").style.display="none";el("modeLabel").textContent="Lernrichtung auswählen";el("modeToggle").style.display="none"}
 function startSelectedRound(dir){direction=dir;roundDirection=dir;localStorage.setItem("vocabDirection",dir);el("modeSelect").style.display="none";el("questionLabel").style.display="block";el("word").style.display="block";el("answers").style.display="grid";el("hearts").style.display="block";el("feedback").style.display="block";el("modeToggle").style.display="none";startRound()}
+window.startSelectedRound=startSelectedRound;
+
 function startRound(){
  const errors=state.wrong.splice(0,5),count=Math.max(0,10-errors.length),fresh=getAll().slice(state.seen,state.seen+count);
  state.seen+=fresh.length; batch=errors.concat(fresh); if(batch.length===0)batch=getAll().slice(0,10);
@@ -152,6 +154,8 @@ el("photoInput").onchange=function(){
  el("photoPreview").style.display="block";
 };
 el("openChatBtn").onclick=function(){window.open("https://chatgpt.com/c/6ab8e047-ab6c-83eb-afb8-d48b90b71f5c","_blank")};
+el("chooseEnDe").addEventListener("click",function(){startSelectedRound("en-de")});
+el("chooseDeEn").addEventListener("click",function(){startSelectedRound("de-en")});
 el("addOne").onclick=function(){if(addCustom(el("eng").value,el("ger").value)){el("eng").value="";el("ger").value=""}}
 el("addBulk").onclick=function(){const lines=el("bulk").value.split(/\n/);let n=0;lines.forEach(line=>{const parts=line.split(/\s*=\s*/);if(parts.length>=2&&addCustom(parts[0],parts.slice(1).join("=")))n++});el("bulk").value="";if(n)showNotice(n+" Vokabel(n) hinzugefügt! 🎉")}
 el("refreshPage").onclick=function(){try{state=JSON.parse(localStorage.getItem("vocabKids")||"null")}catch(e){state=null}if(state){state.currentBatch=null;state.currentIndex=0;state.currentPoints=0;state.currentHearts=3;save()}sessionStorage.setItem("showModeAfterRefresh","1");location.reload()};
