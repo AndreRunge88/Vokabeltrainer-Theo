@@ -18,7 +18,7 @@ button{border:0;border-radius:16px;padding:15px;font-size:18px;font-weight:700;b
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 16px}.stat{background:#f5f7fa;border-radius:14px;padding:13px;text-align:center}.stat b{display:block;font-size:25px}.stat span{font-size:12px;color:#66717d}
 input,textarea{width:100%;padding:13px;border:1px solid #ccd3dc;border-radius:13px;font-size:16px;margin:5px 0 8px;font-family:inherit;box-sizing:border-box}
 textarea{min-height:90px;resize:vertical}.add{background:#4caf73;color:#fff;width:100%;margin-top:5px}
-.list{margin-top:14px;display:grid;gap:8px}.item{display:flex;justify-content:space-between;gap:8px;align-items:center;background:#f5f7fa;padding:10px 12px;border-radius:12px;font-size:14px}
+.list{margin-top:14px;display:grid;gap:8px}.history{margin-top:14px}.historyTitle{font-weight:800;margin:16px 0 8px}.session{display:flex;justify-content:space-between;gap:10px;align-items:center;background:#f5f7fa;padding:10px 12px;border-radius:12px;font-size:14px}.sessionDate{font-weight:700}.sessionDir{font-size:12px;color:#66717d;margin-top:3px}.item{display:flex;justify-content:space-between;gap:8px;align-items:center;background:#f5f7fa;padding:10px 12px;border-radius:12px;font-size:14px}
 .item span{flex:1}.del{padding:7px 10px;font-size:14px;background:#fff0f0;color:#b42318}.close{background:#e9edf2;width:100%;margin-top:10px;font-size:15px}
 .notice{font-size:13px;padding:10px 12px;border-radius:12px;background:#fff7df;margin-top:10px;display:none}
 .reset{background:#fff0f0;color:#b42318;width:100%;margin-top:12px;font-size:14px}
@@ -56,6 +56,11 @@ textarea{min-height:90px;resize:vertical}.add{background:#4caf73;color:#fff;widt
 <div class="stat"><b id="statRate">0 %</b><span>Trefferquote</span></div><div class="stat"><b id="statVocabulary">0</b><span>Vokabeln eingepflegt</span></div>
 </div>
 <p class="hint" id="statRounds">Runden: 0</p>
+<div class="history">
+<div class="historyTitle">🕒 Übungszeiten</div>
+<div class="hint">Hier siehst du, wann eine neue 10er-Runde begonnen wurde.</div>
+<div id="sessionHistory"></div>
+</div>
 <p class="hint">Die offiziellen Schulvokabeln werden zentral gepflegt. Neue Vokabeln kannst du mir einfach als Foto hier im Chat schicken – ich ergänze sie zentral.</p>
 <p class="hint"><b>Eigene Vokabeln</b> kannst du zusätzlich direkt auf diesem Gerät eintragen.</p>
 <input id="eng" placeholder="Englisch, z. B. apple">
@@ -84,7 +89,11 @@ function startSelectedRound(dir){direction=dir;roundDirection=dir;localStorage.s
 function startRound(){
  const errors=state.wrong.splice(0,5),count=Math.max(0,10-errors.length),fresh=getAll().slice(state.seen,state.seen+count);
  state.seen+=fresh.length; batch=errors.concat(fresh); if(batch.length===0)batch=getAll().slice(0,10);
- state.round++;index=0;points=0;hearts=3;roundDirection=direction;state.currentBatch=batch;state.currentIndex=0;state.currentPoints=0;state.currentHearts=3;save();showQuestion()
+ state.round++;index=0;points=0;hearts=3;roundDirection=direction;
+ if(!Array.isArray(state.sessions))state.sessions=[];
+ state.sessions.unshift({time:new Date().toISOString(),direction:roundDirection,round:state.round});
+ state.sessions=state.sessions.slice(0,50);
+ state.currentBatch=batch;state.currentIndex=0;state.currentPoints=0;state.currentHearts=3;save();showQuestion()
 }
 function makeChoices(correctIndex){const correct=batch[index][correctIndex];const others=[];for(const item of getAll()){const value=item[correctIndex];if(value!==correct&&others.indexOf(value)===-1)others.push(value)}shuffle(others);return shuffle(others.slice(0,3).concat([correct]))}
 function showQuestion(){el("modeSelect").style.display="none";el("questionLabel").style.display="block";el("word").style.display="block";el("answers").style.display="grid";el("hearts").style.display="block";el("feedback").style.display="block";locked=false;el("round").textContent="Runde "+state.round+" · "+(index+1)+"/"+batch.length;el("points").textContent="⭐ "+points;el("bar").style.width=index/batch.length*100+"%";const qIndex=roundDirection==="en-de"?0:1; const aIndex=roundDirection==="en-de"?1:0; el("word").textContent=batch[index][qIndex];el("hearts").textContent="❤️".repeat(hearts)+"🖤".repeat(3-hearts);el("feedback").textContent="";el("next").style.display="none";const box=el("answers");box.innerHTML="";makeChoices(aIndex).forEach(function(answer){const b=document.createElement("button");b.textContent=answer;b.onclick=function(){checkAnswer(answer)};box.appendChild(b)})}
@@ -92,7 +101,22 @@ function checkAnswer(answer){if(locked)return;locked=true;document.querySelector
 function next(){if(index<batch.length-1){index++;state.currentIndex=index;state.currentPoints=points;state.currentHearts=hearts;save();showQuestion();return}state.currentBatch=null;state.currentIndex=0;state.currentPoints=0;state.currentHearts=3;save();el("bar").style.width="100%";el("word").textContent="🏆 Runde geschafft!";el("answers").innerHTML="";el("feedback").innerHTML="Du hast <b>"+points+" Punkte</b> gesammelt!";el("next").textContent=state.seen<getAll().length?"➡️ Nächste 10":"🔁 Fehlertraining";el("next").onclick=function(){el("next").onclick=next;startRound()}}
 function saveAll(){localStorage.setItem("vocabKids",JSON.stringify(state));localStorage.setItem("vocabCustom",JSON.stringify(customWords))}
 function showNotice(t){el("notice").textContent=t;el("notice").style.display="block";setTimeout(()=>el("notice").style.display="none",2500)}
-function updateStats(){const s=state.stats||{practiced:0,correct:0,wrong:0};el("statVocabulary").textContent=getAll().length;el("statPracticed").textContent=s.practiced;el("statCorrect").textContent=s.correct;el("statWrong").textContent=s.wrong;el("statRate").textContent=s.practiced?Math.round(s.correct/s.practiced*100)+" %":"0 %";el("statRounds").textContent="Runden: "+state.round}
+function renderSessionHistory(){
+ const box=el("sessionHistory"); if(!box)return;
+ const sessions=Array.isArray(state.sessions)?state.sessions:[];
+ if(!sessions.length){box.innerHTML='<div class="hint">Noch keine Übungszeiten gespeichert.</div>';return}
+ box.innerHTML="";
+ sessions.slice(0,20).forEach(function(s){
+   const d=new Date(s.time);
+   const date=d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"});
+   const time=d.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
+   const dir=s.direction==="de-en"?"🇩🇪 Deutsch → Englisch":"🇬🇧 Englisch → Deutsch";
+   const row=document.createElement("div"); row.className="session";
+   row.innerHTML='<div><div class="sessionDate">'+date+' · '+time+' Uhr</div><div class="sessionDir">'+dir+' · Runde '+s.round+'</div></div>';
+   box.appendChild(row);
+ });
+}
+function updateStats(){const s=state.stats||{practiced:0,correct:0,wrong:0};el("statVocabulary").textContent=getAll().length;el("statPracticed").textContent=s.practiced;el("statCorrect").textContent=s.correct;el("statWrong").textContent=s.wrong;el("statRate").textContent=s.practiced?Math.round(s.correct/s.practiced*100)+" %":"0 %";el("statRounds").textContent="Runden: "+state.round;renderSessionHistory()}
 function renderCustom(){const box=el("customList");box.innerHTML="";if(!customWords.length){box.innerHTML='<div class="hint">Noch keine eigenen Vokabeln hinzugefügt.</div>';return}customWords.forEach(function(w,i){const row=document.createElement("div");row.className="item";const span=document.createElement("span");span.textContent=w[0]+" = "+w[1];const b=document.createElement("button");b.className="del";b.textContent="Löschen";b.onclick=function(){customWords.splice(i,1);saveAll();renderCustom();showNotice("Vokabel gelöscht.")};row.appendChild(span);row.appendChild(b);box.appendChild(row)})}
 async function loadVocabulary(){
  try{const res=await fetch("vocab.json?v="+Date.now(),{cache:"no-store"});if(!res.ok)throw new Error("HTTP "+res.status);const data=await res.json();if(Array.isArray(data)&&data.length)remoteWords=data}catch(e){}
@@ -122,7 +146,7 @@ el("modeToggle").onclick=function(){showModeSelection()};
 el("modeLabel").textContent=direction==="en-de"?"Englisch 🇬🇧 → Deutsch 🇩🇪":"Deutsch 🇩🇪 → Englisch 🇬🇧";el("modeToggle").textContent=direction==="en-de"?"🔄 Deutsch → Englisch üben":"🔄 Englisch → Deutsch üben";
 el("adminOpen").onclick=function(){const pin=prompt("🔐 Eltern-PIN eingeben:");if(pin==="2705"){el("adminPanel").classList.add("show");renderCustom();updateStats()}else if(pin!==null)alert("❌ Falsche PIN")}
 el("adminClose").onclick=function(){el("adminPanel").classList.remove("show")}
-el("resetStats").onclick=function(){if(confirm("Lernstand und Statistik wirklich auf Anfang setzen?")){state={seen:0,wrong:[],round:0,stats:{practiced:0,correct:0,wrong:0},currentBatch:null,currentIndex:0,currentPoints:0,currentHearts:3,currentDirection:direction};save();batch=[];index=0;points=0;hearts=3;showNotice("Lernstand zurückgesetzt.");setTimeout(startRound,300)}}
+el("resetStats").onclick=function(){if(confirm("Lernstand und Statistik wirklich auf Anfang setzen?")){state={seen:0,wrong:[],round:0,stats:{practiced:0,correct:0,wrong:0},sessions:[],currentBatch:null,currentIndex:0,currentPoints:0,currentHearts:3,currentDirection:direction};save();batch=[];index=0;points=0;hearts=3;showNotice("Lernstand zurückgesetzt.");setTimeout(startRound,300)}}
 el("next").onclick=next;
 const oldCheck=checkAnswer;
 loadVocabulary();
