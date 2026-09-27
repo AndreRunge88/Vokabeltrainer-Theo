@@ -131,7 +131,9 @@ async function loadVocabulary(){
  try{state=JSON.parse(localStorage.getItem("vocabKids")||"null")}catch(e){state=null}
  if(!state)state={seen:0,wrong:[],round:0,stats:{practiced:0,correct:0,wrong:0},currentBatch:null,currentIndex:0,currentPoints:0,currentHearts:3,currentDirection:direction};
  if(!state.stats)state.stats={practiced:0,correct:0,wrong:0};
- showQuestionOrStart();
+ const forceMode=sessionStorage.getItem("showModeAfterRefresh")==="1";
+ sessionStorage.removeItem("showModeAfterRefresh");
+ if(forceMode){showModeSelection();}else{showQuestionOrStart();}
 }
 function showQuestionOrStart(){
  if(state.currentBatch && Array.isArray(state.currentBatch) && state.currentBatch.length && state.currentIndex < state.currentBatch.length){
@@ -152,7 +154,7 @@ el("photoInput").onchange=function(){
 el("openChatBtn").onclick=function(){window.open("https://chatgpt.com/c/6ab8e047-ab6c-83eb-afb8-d48b90b71f5c","_blank")};
 el("addOne").onclick=function(){if(addCustom(el("eng").value,el("ger").value)){el("eng").value="";el("ger").value=""}}
 el("addBulk").onclick=function(){const lines=el("bulk").value.split(/\n/);let n=0;lines.forEach(line=>{const parts=line.split(/\s*=\s*/);if(parts.length>=2&&addCustom(parts[0],parts.slice(1).join("=")))n++});el("bulk").value="";if(n)showNotice(n+" Vokabel(n) hinzugefügt! 🎉")}
-el("refreshPage").onclick=function(){location.reload()};
+el("refreshPage").onclick=function(){try{state=JSON.parse(localStorage.getItem("vocabKids")||"null")}catch(e){state=null}if(state){state.currentBatch=null;state.currentIndex=0;state.currentPoints=0;state.currentHearts=3;save()}sessionStorage.setItem("showModeAfterRefresh","1");location.reload()};
 el("modeToggle").onclick=function(){showModeSelection()};
 el("modeLabel").textContent=direction==="en-de"?"Englisch 🇬🇧 → Deutsch 🇩🇪":"Deutsch 🇩🇪 → Englisch 🇬🇧";el("modeToggle").textContent=direction==="en-de"?"🔄 Deutsch → Englisch üben":"🔄 Englisch → Deutsch üben";
 el("adminOpen").onclick=function(){const pin=prompt("🔐 Eltern-PIN eingeben:");if(pin==="2705"){el("adminPanel").classList.add("show");renderCustom();updateStats()}else if(pin!==null)alert("❌ Falsche PIN")}
