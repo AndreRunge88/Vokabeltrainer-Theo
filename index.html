@@ -154,7 +154,7 @@ el("photoInput").onchange=function(){
  el("photoImage").src=url;
  el("photoPreview").style.display="block";
 };
-el("openChatBtn").onclick=function(){window.open("https://chatgpt.com/","_blank")};
+el("openChatBtn").onclick=function(){window.open("https://chatgpt.com/c/6ab8e047-ab6c-83eb-afb8-d48b90b71f5c","_blank")};
 el("addOne").onclick=function(){if(addCustom(el("eng").value,el("ger").value)){el("eng").value="";el("ger").value=""}}
 el("addBulk").onclick=function(){const lines=el("bulk").value.split(/\n/);let n=0;lines.forEach(line=>{const parts=line.split(/\s*=\s*/);if(parts.length>=2&&addCustom(parts[0],parts.slice(1).join("=")))n++});el("bulk").value="";if(n)showNotice(n+" Vokabel(n) hinzugefügt! 🎉")}
 el("refreshPage").onclick=function(){location.reload()};
