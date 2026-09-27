@@ -80,9 +80,7 @@ function startRound(){
   const fresh = getAll().slice(state.seen, state.seen+count);
   state.seen += fresh.length;
   batch = errors.concat(fresh);
-  if(batch.length===0){
-    batch = getAll().slice(0,10);
-  }
+  if(batch.length===0){ batch = getAll().slice(0,10); }
   state.round++;
   index=0; points=0; hearts=3;
   save();
@@ -207,7 +205,7 @@ el("addBulk").onclick=function(){
 };
 el("adminOpen").onclick=function(){
   const pin=prompt("🔐 Eltern-PIN eingeben:");
-  if(pin==="2468"){
+  if(pin==="2705"){
     el("adminPanel").classList.add("show"); renderCustom();
   }else if(pin!==null){
     alert("❌ Falsche PIN");
@@ -221,7 +219,6 @@ try{
 if(!state) state={seen:0,wrong:[],round:0,points:0};
 el("next").onclick=next;
 loadVocabulary();
-
 </script>
 </body>
 </html>
