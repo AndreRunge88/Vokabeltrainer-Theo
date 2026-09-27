@@ -39,7 +39,7 @@ textarea{min-height:90px;resize:vertical}.add{background:#4caf73;color:#fff;widt
 <button class="next" id="next">Weiter ➜</button>
 <div class="score" id="done"></div>
 <div class="small">10 Vokabeln pro Runde · Fehler kommen später wieder.<br>Der Lernstand und eigene Vokabeln werden auf diesem Gerät gespeichert.</div>
-<button class="adminBtn" id="adminOpen">👨‍👩‍👦 Elternbereich</button>
+<button class="adminBtn" id="adminOpen">🔐 Elternbereich</button>
 <div class="panel" id="adminPanel">
 <h2>👨‍👩‍👦 Elternbereich</h2>
 <p class="hint">Die offiziellen Schulvokabeln werden zentral gepflegt und erscheinen automatisch auf Theos iPhone. Wenn ihr neue Vokabeln bekommt, schick sie mir einfach hier im Chat – ich ergänze sie zentral.</p>
@@ -205,7 +205,14 @@ el("addBulk").onclick=function(){
   el("bulk").value="";
   if(n) showNotice(n+" Vokabel(n) hinzugefügt! 🎉");
 };
-el("adminOpen").onclick=function(){el("adminPanel").classList.add("show");renderCustom();};
+el("adminOpen").onclick=function(){
+  const pin=prompt("🔐 Eltern-PIN eingeben:");
+  if(pin==="2468"){
+    el("adminPanel").classList.add("show"); renderCustom();
+  }else if(pin!==null){
+    alert("❌ Falsche PIN");
+  }
+};
 el("adminClose").onclick=function(){el("adminPanel").classList.remove("show");};
 
 try{
