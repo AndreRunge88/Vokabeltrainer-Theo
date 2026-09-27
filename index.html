@@ -39,10 +39,11 @@ textarea{min-height:90px;resize:vertical}.add{background:#4caf73;color:#fff;widt
 <button class="next" id="next">Weiter ➜</button>
 <div class="score" id="done"></div>
 <div class="small">10 Vokabeln pro Runde · Fehler kommen später wieder.<br>Der Lernstand und eigene Vokabeln werden auf diesem Gerät gespeichert.</div>
-<button class="adminBtn" id="adminOpen">⚙️ Vokabeln verwalten</button>
+<button class="adminBtn" id="adminOpen">👨‍👩‍👦 Elternbereich</button>
 <div class="panel" id="adminPanel">
-<h2>➕ Neue Vokabeln</h2>
-<p class="hint">Einfach Englisch und Deutsch eintragen. Mehrere können auch auf einmal eingefügt werden: <b>Englisch = Deutsch</b></p>
+<h2>👨‍👩‍👦 Elternbereich</h2>
+<p class="hint">Die offiziellen Schulvokabeln werden zentral gepflegt und erscheinen automatisch auf Theos iPhone. Wenn ihr neue Vokabeln bekommt, schick sie mir einfach hier im Chat – ich ergänze sie zentral.</p>
+<p class="hint"><b>Eigene Vokabeln</b> kannst du zusätzlich direkt auf diesem Gerät eintragen.</p>
 <input id="eng" placeholder="Englisch, z. B. apple">
 <input id="ger" placeholder="Deutsch, z. B. Apfel">
 <button class="add" id="addOne">Vokabel hinzufügen</button>
@@ -59,9 +60,10 @@ teacher = Lehrer"></textarea>
 const WORDS = [["father", "der Vater"], ["mother", "die Mutter"], ["grandma", "die Oma; die Großmutter"], ["grandpa", "der Opa; der Großvater"], ["aunt", "die Tante"], ["uncle", "der Onkel"], ["cousin", "der Cousin; die Cousine"], ["people", "Leute; Menschen"], ["message", "die Nachricht; die SMS"], ["text message", "die Textnachricht; SMS"], ["conversation", "das Gespräch; die Unterhaltung"], ["question", "die Frage"], ["answer", "die Antwort"], ["to say", "sagen"], ["to hear", "hören"], ["to talk (to)", "reden (mit); sich unterhalten (mit)"], ["to help", "helfen"], ["help", "die Hilfe"], ["again", "wieder; noch einmal"], ["primary school", "die Grundschule"], ["to learn", "lernen"], ["to understand", "verstehen"], ["to pronounce", "aussprechen"], ["to type", "tippen"], ["letter", "der Buchstabe"], ["word", "das Wort"], ["the first word", "das erste Wort"], ["sentence", "der Satz"], ["full stop", "der Punkt (Satzzeichen)"], ["e.g.", "z. B. (zum Beispiel)"], ["careful", "vorsichtig"], ["English", "Englisch; englisch"], ["language", "die Sprache"], ["like words in other languages", "wie Wörter in anderen Sprachen"], ["other", "andere(r, s)"], ["phrase", "der Satz; der Ausdruck; die Redewendung"], ["in English / in German", "auf Englisch / auf Deutsch"], ["free", "frei"], ["to hang out", "abhängen; rumhängen"], ["at my place", "bei mir"], ["place", "der Ort; der Platz; die Stelle"], ["when", "wenn"], ["then", "dann"], ["before", "vor"], ["or", "oder"], ["to use", "benutzen; verwenden"], ["useful", "nützlich"], ["some", "einige; ein paar; etwas"], ["very big", "sehr groß"], ["Good morning.", "Guten Morgen."], ["parcel", "das Paket; das Päckchen"], ["umbrella", "der Schirm; der Regenschirm"], ["your favourite book", "dein Lieblingsbuch"], ["Lily’s letter", "Lilys Brief"], ["Here’s …", "Hier ist …"], ["Here are …", "Hier sind …"], ["There’s …", "Es ist … / Es gibt …"], ["There are …", "Es sind … / Es gibt …"], ["its", "sein(e); ihr(e)"]];
 
 const BASE = WORDS;
+let remoteWords = null;
 let customWords = [];
 try { customWords = JSON.parse(localStorage.getItem("vocabCustom") || "[]"); } catch(e) { customWords=[]; }
-function getAll(){ return BASE.concat(customWords); }
+function getAll(){ return (remoteWords || BASE).concat(customWords); }
 let state = null, batch = [], index = 0, points = 0, hearts = 3, locked = false;
 
 function el(id){ return document.getElementById(id); }
@@ -175,6 +177,16 @@ function renderCustom(){
     row.appendChild(span); row.appendChild(b); box.appendChild(row);
   });
 }
+async function loadVocabulary(){
+  try{
+    const res=await fetch("vocab.json?v="+Date.now(),{cache:"no-store"});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const data=await res.json();
+    if(Array.isArray(data) && data.length) remoteWords=data;
+  }catch(e){}
+  startRound();
+}
+
 function addCustom(en,de){
   en=en.trim(); de=de.trim();
   if(!en||!de){ showNotice("Bitte Englisch und Deutsch eintragen."); return false; }
@@ -201,7 +213,7 @@ try{
 }catch(e){ state=null; }
 if(!state) state={seen:0,wrong:[],round:0,points:0};
 el("next").onclick=next;
-startRound();
+loadVocabulary();
 
 </script>
 </body>
