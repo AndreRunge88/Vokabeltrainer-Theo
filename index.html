@@ -13,16 +13,15 @@ h1{margin:0;font-size:25px}.subtitle{color:#66717d;margin:5px 0 18px}.top{displa
 button{border:0;border-radius:16px;padding:15px;font-size:18px;font-weight:700;background:#edf2f8;color:#17202a}button:active{transform:scale(.98)}
 .feedback{margin-top:16px;padding:15px;border-radius:16px;font-size:18px;text-align:center;min-height:24px}.next{background:#5b8def;color:white;width:100%;margin-top:12px;display:none}
 .score{text-align:center;font-size:20px;font-weight:800;margin:20px 0}.small{font-size:13px;color:#6d7782;text-align:center;margin-top:18px;line-height:1.4}
-
-.adminBtn{width:100%;margin-top:18px;background:#f0f3f7;font-size:15px}
-.panel{display:none;margin-top:18px;padding-top:18px;border-top:1px solid #e5e8ed}
-.panel.show{display:block}.panel h2{font-size:20px;margin:0 0 8px}
-.hint{font-size:13px;color:#66717d;margin:0 0 12px;line-height:1.4}
-input,textarea{width:100%;padding:13px;border:1px solid #ccd3dc;border-radius:13px;font-size:16px;margin:5px 0 8px;font-family:inherit}
+.adminBtn{width:100%;margin-top:18px;background:#f0f3f7;font-size:15px}.panel{display:none;margin-top:18px;padding-top:18px;border-top:1px solid #e5e8ed}
+.panel.show{display:block}.panel h2{font-size:20px;margin:0 0 8px}.hint{font-size:13px;color:#66717d;margin:0 0 12px;line-height:1.4}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 16px}.stat{background:#f5f7fa;border-radius:14px;padding:13px;text-align:center}.stat b{display:block;font-size:25px}.stat span{font-size:12px;color:#66717d}
+input,textarea{width:100%;padding:13px;border:1px solid #ccd3dc;border-radius:13px;font-size:16px;margin:5px 0 8px;font-family:inherit;box-sizing:border-box}
 textarea{min-height:90px;resize:vertical}.add{background:#4caf73;color:#fff;width:100%;margin-top:5px}
 .list{margin-top:14px;display:grid;gap:8px}.item{display:flex;justify-content:space-between;gap:8px;align-items:center;background:#f5f7fa;padding:10px 12px;border-radius:12px;font-size:14px}
-.item span{flex:1}.del{padding:7px 10px;font-size:14px;background:#fff0f0;color:#b42318}
-.close{background:#e9edf2;width:100%;margin-top:10px;font-size:15px}.notice{font-size:13px;padding:10px 12px;border-radius:12px;background:#fff7df;margin-top:10px;display:none}
+.item span{flex:1}.del{padding:7px 10px;font-size:14px;background:#fff0f0;color:#b42318}.close{background:#e9edf2;width:100%;margin-top:10px;font-size:15px}
+.notice{font-size:13px;padding:10px 12px;border-radius:12px;background:#fff7df;margin-top:10px;display:none}
+.reset{background:#fff0f0;color:#b42318;width:100%;margin-top:12px;font-size:14px}
 </style>
 </head>
 <body>
@@ -38,11 +37,18 @@ textarea{min-height:90px;resize:vertical}.add{background:#4caf73;color:#fff;widt
 <div class="feedback" id="feedback"></div>
 <button class="next" id="next">Weiter ➜</button>
 <div class="score" id="done"></div>
-<div class="small">10 Vokabeln pro Runde · Fehler kommen später wieder.<br>Der Lernstand und eigene Vokabeln werden auf diesem Gerät gespeichert.</div>
+<div class="small">10 Vokabeln pro Runde · Fehler kommen später wieder.<br>Der Lernstand bleibt auch beim Aktualisieren erhalten.</div>
 <button class="adminBtn" id="adminOpen">🔐 Elternbereich</button>
 <div class="panel" id="adminPanel">
 <h2>👨‍👩‍👦 Elternbereich</h2>
-<p class="hint">Die offiziellen Schulvokabeln werden zentral gepflegt und erscheinen automatisch auf Theos iPhone. Wenn ihr neue Vokabeln bekommt, schick sie mir einfach hier im Chat – ich ergänze sie zentral.</p>
+<div class="stats">
+<div class="stat"><b id="statPracticed">0</b><span>Vokabeln geübt</span></div>
+<div class="stat"><b id="statCorrect">0</b><span>richtig</span></div>
+<div class="stat"><b id="statWrong">0</b><span>falsch</span></div>
+<div class="stat"><b id="statRate">0 %</b><span>Trefferquote</span></div>
+</div>
+<p class="hint" id="statRounds">Runden: 0</p>
+<p class="hint">Die offiziellen Schulvokabeln werden zentral gepflegt. Neue Vokabeln kannst du mir einfach als Foto hier im Chat schicken – ich ergänze sie zentral.</p>
 <p class="hint"><b>Eigene Vokabeln</b> kannst du zusätzlich direkt auf diesem Gerät eintragen.</p>
 <input id="eng" placeholder="Englisch, z. B. apple">
 <input id="ger" placeholder="Deutsch, z. B. Apfel">
@@ -53,171 +59,54 @@ teacher = Lehrer"></textarea>
 <button class="add" id="addBulk">Mehrere Vokabeln hinzufügen</button>
 <div class="notice" id="notice"></div>
 <div class="list" id="customList"></div>
+<button class="reset" id="resetStats">🔄 Lernstand auf Anfang setzen</button>
 <button class="close" id="adminClose">Schließen</button>
 </div>
 </div></main>
 <script>
-const WORDS = [["father", "der Vater"], ["mother", "die Mutter"], ["grandma", "die Oma; die Großmutter"], ["grandpa", "der Opa; der Großvater"], ["aunt", "die Tante"], ["uncle", "der Onkel"], ["cousin", "der Cousin; die Cousine"], ["people", "Leute; Menschen"], ["message", "die Nachricht; die SMS"], ["text message", "die Textnachricht; SMS"], ["conversation", "das Gespräch; die Unterhaltung"], ["question", "die Frage"], ["answer", "die Antwort"], ["to say", "sagen"], ["to hear", "hören"], ["to talk (to)", "reden (mit); sich unterhalten (mit)"], ["to help", "helfen"], ["help", "die Hilfe"], ["again", "wieder; noch einmal"], ["primary school", "die Grundschule"], ["to learn", "lernen"], ["to understand", "verstehen"], ["to pronounce", "aussprechen"], ["to type", "tippen"], ["letter", "der Buchstabe"], ["word", "das Wort"], ["the first word", "das erste Wort"], ["sentence", "der Satz"], ["full stop", "der Punkt (Satzzeichen)"], ["e.g.", "z. B. (zum Beispiel)"], ["careful", "vorsichtig"], ["English", "Englisch; englisch"], ["language", "die Sprache"], ["like words in other languages", "wie Wörter in anderen Sprachen"], ["other", "andere(r, s)"], ["phrase", "der Satz; der Ausdruck; die Redewendung"], ["in English / in German", "auf Englisch / auf Deutsch"], ["free", "frei"], ["to hang out", "abhängen; rumhängen"], ["at my place", "bei mir"], ["place", "der Ort; der Platz; die Stelle"], ["when", "wenn"], ["then", "dann"], ["before", "vor"], ["or", "oder"], ["to use", "benutzen; verwenden"], ["useful", "nützlich"], ["some", "einige; ein paar; etwas"], ["very big", "sehr groß"], ["Good morning.", "Guten Morgen."], ["parcel", "das Paket; das Päckchen"], ["umbrella", "der Schirm; der Regenschirm"], ["your favourite book", "dein Lieblingsbuch"], ["Lily’s letter", "Lilys Brief"], ["Here’s …", "Hier ist …"], ["Here are …", "Hier sind …"], ["There’s …", "Es ist … / Es gibt …"], ["There are …", "Es sind … / Es gibt …"], ["its", "sein(e); ihr(e)"]];
-
-const BASE = WORDS;
-let remoteWords = null;
-let customWords = [];
-try { customWords = JSON.parse(localStorage.getItem("vocabCustom") || "[]"); } catch(e) { customWords=[]; }
-function getAll(){ return (remoteWords || BASE).concat(customWords); }
-let state = null, batch = [], index = 0, points = 0, hearts = 3, locked = false;
-
-function el(id){ return document.getElementById(id); }
-function save(){ localStorage.setItem("vocabKids", JSON.stringify(state)); }
-function norm(x){
-  return String(x).toLowerCase().trim().replace(/[.,!?]/g,"")
-    .replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss");
-}
-function shuffle(a){ return a.sort(function(){return Math.random()-0.5;}); }
-
+const WORDS = [["father","der Vater"],["mother","die Mutter"],["grandma","die Oma; die Großmutter"],["grandpa","der Opa; der Großvater"],["aunt","die Tante"],["uncle","der Onkel"],["cousin","der Cousin; die Cousine"],["people","Leute; Menschen"],["message","die Nachricht; die SMS"],["text message","die Textnachricht; SMS"],["conversation","das Gespräch; die Unterhaltung"],["question","die Frage"],["answer","die Antwort"],["to say","sagen"],["to hear","hören"],["to talk (to)","reden (mit); sich unterhalten (mit)"],["to help","helfen"],["help","die Hilfe"],["again","wieder; noch einmal"],["primary school","die Grundschule"],["to learn","lernen"],["to understand","verstehen"],["to pronounce","aussprechen"],["to type","tippen"],["letter","der Buchstabe"],["word","das Wort"],["the first word","das erste Wort"],["sentence","der Satz"],["full stop","der Punkt (Satzzeichen)"],["e.g.","z. B. (zum Beispiel)"],["careful","vorsichtig"],["English","Englisch; englisch"],["language","die Sprache"],["like words in other languages","wie Wörter in anderen Sprachen"],["other","andere(r, s)"],["phrase","der Satz; der Ausdruck; die Redewendung"],["in English / in German","auf Englisch / auf Deutsch"],["free","frei"],["to hang out","abhängen; rumhängen"],["at my place","bei mir"],["place","der Ort; der Platz; die Stelle"],["when","wenn"],["then","dann"],["before","vor"],["or","oder"],["to use","benutzen; verwenden"],["useful","nützlich"],["some","einige; ein paar; etwas"],["very big","sehr groß"],["Good morning.","Guten Morgen."],["parcel","das Paket; das Päckchen"],["umbrella","der Schirm; der Regenschirm"],["your favourite book","dein Lieblingsbuch"],["Lily’s letter","Lilys Brief"],["Here’s …","Hier ist …"],["Here are …","Hier sind …"],["There’s …","Es ist … / Es gibt …"],["There are …","Es sind … / Es gibt …"],["its","sein(e); ihr(e)"]];
+const BASE=WORDS; let remoteWords=null,customWords=[]; try{customWords=JSON.parse(localStorage.getItem("vocabCustom")||"[]")}catch(e){customWords=[]}
+function getAll(){return(remoteWords||BASE).concat(customWords)}
+let state=null,batch=[],index=0,points=0,hearts=3,locked=false;
+function el(id){return document.getElementById(id)} function save(){localStorage.setItem("vocabKids",JSON.stringify(state))}
+function norm(x){return String(x).toLowerCase().trim().replace(/[.,!?]/g,"").replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss")}
+function shuffle(a){return a.sort(function(){return Math.random()-.5})}
 function startRound(){
-  const errors = state.wrong.splice(0,5);
-  const count = Math.max(0, 10-errors.length);
-  const fresh = getAll().slice(state.seen, state.seen+count);
-  state.seen += fresh.length;
-  batch = errors.concat(fresh);
-  if(batch.length===0){ batch = getAll().slice(0,10); }
-  state.round++;
-  index=0; points=0; hearts=3;
-  save();
-  showQuestion();
+ const errors=state.wrong.splice(0,5),count=Math.max(0,10-errors.length),fresh=getAll().slice(state.seen,state.seen+count);
+ state.seen+=fresh.length; batch=errors.concat(fresh); if(batch.length===0)batch=getAll().slice(0,10);
+ state.round++;index=0;points=0;hearts=3;save();showQuestion()
 }
-
-function makeChoices(correct){
-  const others = [];
-  for(const item of getAll()){
-    if(item[1] !== correct && others.indexOf(item[1])===-1) others.push(item[1]);
-  }
-  shuffle(others);
-  return shuffle(others.slice(0,3).concat([correct]));
-}
-
-function showQuestion(){
-  locked=false;
-  el("round").textContent="Runde "+state.round+" · "+(index+1)+"/"+batch.length;
-  el("points").textContent="⭐ "+points;
-  el("bar").style.width=(index/batch.length*100)+"%";
-  el("word").textContent=batch[index][0];
-  el("hearts").textContent="❤️".repeat(hearts)+"🖤".repeat(3-hearts);
-  el("feedback").textContent="";
-  el("next").style.display="none";
-  const box=el("answers"); box.innerHTML="";
-  makeChoices(batch[index][1]).forEach(function(answer){
-    const b=document.createElement("button");
-    b.textContent=answer;
-    b.onclick=function(){ checkAnswer(answer); };
-    box.appendChild(b);
-  });
-}
-
-function checkAnswer(answer){
-  if(locked) return;
-  locked=true;
-  document.querySelectorAll("#answers button").forEach(function(b){b.disabled=true;});
-  if(norm(answer)===norm(batch[index][1])){
-    points+=10;
-    el("feedback").innerHTML="🎉 Richtig! +10 ⭐";
-  }else{
-    hearts--;
-    state.wrong.push(batch[index]);
-    el("feedback").innerHTML="❌ Noch einmal üben!<br><b>Richtig:</b> "+batch[index][1];
-  }
-  save();
-  el("points").textContent="⭐ "+points;
-  el("hearts").textContent="❤️".repeat(hearts)+"🖤".repeat(3-hearts);
-  el("next").style.display="block";
-}
-
-function next(){
-  if(index < batch.length-1){
-    index++;
-    showQuestion();
-    return;
-  }
-  el("bar").style.width="100%";
-  el("word").textContent="🏆 Runde geschafft!";
-  el("answers").innerHTML="";
-  el("feedback").innerHTML="Du hast <b>"+points+" Punkte</b> gesammelt!";
-  el("next").textContent=state.seen<getAll().length ? "➡️ Nächste 10" : "🔁 Fehlertraining";
-  el("next").onclick=function(){
-    el("next").onclick=next;
-    startRound();
-  };
-}
-
-function saveAll(){
-  localStorage.setItem("vocabKids", JSON.stringify(state));
-  localStorage.setItem("vocabCustom", JSON.stringify(customWords));
-}
-function showNotice(t){
-  el("notice").textContent=t;
-  el("notice").style.display="block";
-  setTimeout(()=>el("notice").style.display="none",2500);
-}
-function renderCustom(){
-  const box=el("customList");
-  box.innerHTML="";
-  if(!customWords.length){
-    box.innerHTML='<div class="hint">Noch keine eigenen Vokabeln hinzugefügt.</div>';
-    return;
-  }
-  customWords.forEach(function(w,i){
-    const row=document.createElement("div"); row.className="item";
-    const span=document.createElement("span"); span.textContent=w[0]+" = "+w[1];
-    const b=document.createElement("button"); b.className="del"; b.textContent="Löschen";
-    b.onclick=function(){
-      customWords.splice(i,1); saveAll(); renderCustom(); showNotice("Vokabel gelöscht.");
-    };
-    row.appendChild(span); row.appendChild(b); box.appendChild(row);
-  });
-}
+function makeChoices(correct){const others=[];for(const item of getAll())if(item[1]!==correct&&others.indexOf(item[1])===-1)others.push(item[1]);shuffle(others);return shuffle(others.slice(0,3).concat([correct]))}
+function showQuestion(){locked=false;el("round").textContent="Runde "+state.round+" · "+(index+1)+"/"+batch.length;el("points").textContent="⭐ "+points;el("bar").style.width=index/batch.length*100+"%";el("word").textContent=batch[index][0];el("hearts").textContent="❤️".repeat(hearts)+"🖤".repeat(3-hearts);el("feedback").textContent="";el("next").style.display="none";const box=el("answers");box.innerHTML="";makeChoices(batch[index][1]).forEach(function(answer){const b=document.createElement("button");b.textContent=answer;b.onclick=function(){checkAnswer(answer)};box.appendChild(b)})}
+function checkAnswer(answer){if(locked)return;locked=true;document.querySelectorAll("#answers button").forEach(b=>b.disabled=true);state.stats.practiced++;if(norm(answer)===norm(batch[index][1])){points+=10;state.stats.correct++;el("feedback").innerHTML="🎉 Richtig! +10 ⭐"}else{hearts--;state.stats.wrong++;state.wrong.push(batch[index]);el("feedback").innerHTML="❌ Noch einmal üben!<br><b>Richtig:</b> "+batch[index][1]}save();el("points").textContent="⭐ "+points;el("hearts").textContent="❤️".repeat(hearts)+"🖤".repeat(3-hearts);el("next").style.display="block"}
+function next(){if(index<batch.length-1){index++;showQuestion();return}el("bar").style.width="100%";el("word").textContent="🏆 Runde geschafft!";el("answers").innerHTML="";el("feedback").innerHTML="Du hast <b>"+points+" Punkte</b> gesammelt!";el("next").textContent=state.seen<getAll().length?"➡️ Nächste 10":"🔁 Fehlertraining";el("next").onclick=function(){el("next").onclick=next;startRound()}}
+function saveAll(){localStorage.setItem("vocabKids",JSON.stringify(state));localStorage.setItem("vocabCustom",JSON.stringify(customWords))}
+function showNotice(t){el("notice").textContent=t;el("notice").style.display="block";setTimeout(()=>el("notice").style.display="none",2500)}
+function updateStats(){const s=state.stats||{practiced:0,correct:0,wrong:0};el("statPracticed").textContent=s.practiced;el("statCorrect").textContent=s.correct;el("statWrong").textContent=s.wrong;el("statRate").textContent=s.practiced?Math.round(s.correct/s.practiced*100)+" %":"0 %";el("statRounds").textContent="Runden: "+state.round}
+function renderCustom(){const box=el("customList");box.innerHTML="";if(!customWords.length){box.innerHTML='<div class="hint">Noch keine eigenen Vokabeln hinzugefügt.</div>';return}customWords.forEach(function(w,i){const row=document.createElement("div");row.className="item";const span=document.createElement("span");span.textContent=w[0]+" = "+w[1];const b=document.createElement("button");b.className="del";b.textContent="Löschen";b.onclick=function(){customWords.splice(i,1);saveAll();renderCustom();showNotice("Vokabel gelöscht.")};row.appendChild(span);row.appendChild(b);box.appendChild(row)})}
 async function loadVocabulary(){
-  try{
-    const res=await fetch("vocab.json?v="+Date.now(),{cache:"no-store"});
-    if(!res.ok) throw new Error("HTTP "+res.status);
-    const data=await res.json();
-    if(Array.isArray(data) && data.length) remoteWords=data;
-  }catch(e){}
-  startRound();
+ try{const res=await fetch("vocab.json?v="+Date.now(),{cache:"no-store"});if(!res.ok)throw new Error("HTTP "+res.status);const data=await res.json();if(Array.isArray(data)&&data.length)remoteWords=data}catch(e){}
+ try{state=JSON.parse(localStorage.getItem("vocabKids")||"null")}catch(e){state=null}
+ if(!state)state={seen:0,wrong:[],round:0,stats:{practiced:0,correct:0,wrong:0}};
+ if(!state.stats)state.stats={practiced:0,correct:0,wrong:0};
+ showQuestionOrStart()
 }
-
-function addCustom(en,de){
-  en=en.trim(); de=de.trim();
-  if(!en||!de){ showNotice("Bitte Englisch und Deutsch eintragen."); return false; }
-  if(getAll().some(w=>norm(w[0])===norm(en))){ showNotice("Diese Vokabel gibt es schon."); return false; }
-  customWords.push([en,de]); saveAll(); renderCustom(); showNotice("Vokabel hinzugefügt! 🎉"); return true;
+function showQuestionOrStart(){
+ if(state.currentBatch && Array.isArray(state.currentBatch) && state.currentIndex < state.currentBatch.length){
+   batch=state.currentBatch; index=state.currentIndex; points=state.currentPoints||0; hearts=state.currentHearts||3; showQuestion();
+ }else{
+   startRound();
+ }
 }
-el("addOne").onclick=function(){
-  if(addCustom(el("eng").value,el("ger").value)){el("eng").value="";el("ger").value="";}
-};
-el("addBulk").onclick=function(){
-  const lines=el("bulk").value.split(/\n/); let n=0;
-  lines.forEach(line=>{
-    const parts=line.split(/\s*=\s*/);
-    if(parts.length>=2 && addCustom(parts[0],parts.slice(1).join("="))) n++;
-  });
-  el("bulk").value="";
-  if(n) showNotice(n+" Vokabel(n) hinzugefügt! 🎉");
-};
-el("adminOpen").onclick=function(){
-  const pin=prompt("🔐 Eltern-PIN eingeben:");
-  if(pin==="2705"){
-    el("adminPanel").classList.add("show"); renderCustom();
-  }else if(pin!==null){
-    alert("❌ Falsche PIN");
-  }
-};
-el("adminClose").onclick=function(){el("adminPanel").classList.remove("show");};
-
-try{
-  state=JSON.parse(localStorage.getItem("vocabKids")||"null");
-}catch(e){ state=null; }
-if(!state) state={seen:0,wrong:[],round:0,points:0};
+function persistCurrent(){state.currentBatch=batch;state.currentIndex=index;state.currentPoints=points;state.currentHearts=hearts;save()}
+function addCustom(en,de){en=en.trim();de=de.trim();if(!en||!de){showNotice("Bitte Englisch und Deutsch eintragen.");return false}if(getAll().some(w=>norm(w[0])===norm(en))){showNotice("Diese Vokabel gibt es schon.");return false}customWords.push([en,de]);saveAll();renderCustom();showNotice("Vokabel hinzugefügt! 🎉");return true}
+el("addOne").onclick=function(){if(addCustom(el("eng").value,el("ger").value)){el("eng").value="";el("ger").value=""}}
+el("addBulk").onclick=function(){const lines=el("bulk").value.split(/\n/);let n=0;lines.forEach(line=>{const parts=line.split(/\s*=\s*/);if(parts.length>=2&&addCustom(parts[0],parts.slice(1).join("=")))n++});el("bulk").value="";if(n)showNotice(n+" Vokabel(n) hinzugefügt! 🎉")}
+el("adminOpen").onclick=function(){const pin=prompt("🔐 Eltern-PIN eingeben:");if(pin==="2705"){el("adminPanel").classList.add("show");renderCustom();updateStats()}else if(pin!==null)alert("❌ Falsche PIN")}
+el("adminClose").onclick=function(){el("adminPanel").classList.remove("show")}
+el("resetStats").onclick=function(){if(confirm("Lernstand und Statistik wirklich auf Anfang setzen?")){state={seen:0,wrong:[],round:0,stats:{practiced:0,correct:0,wrong:0},currentBatch:null,currentIndex:0,currentPoints:0,currentHearts:3};save();batch=[];index=0;points=0;hearts=3;showNotice("Lernstand zurückgesetzt.");setTimeout(startRound,300)}}
 el("next").onclick=next;
+const oldCheck=checkAnswer;
 loadVocabulary();
 </script>
 </body>
