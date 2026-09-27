@@ -31,7 +31,13 @@ textarea{min-height:90px;resize:vertical}.add{background:#4caf73;color:#fff;widt
 <button class="adminBtn" id="modeToggle">🔄 Deutsch → Englisch üben</button>
 <div class="top"><span id="round">Start...</span><span id="points">⭐ 0</span></div>
 <div class="progress"><div class="bar" id="bar"></div></div>
-<div class="q">Was bedeutet:</div>
+<div id="modeSelect" style="display:none;text-align:center;margin:20px 0">
+<h2 style="margin-bottom:10px">🎯 Wie möchtest du üben?</h2>
+<p class="hint">Wähle eine Richtung für die nächsten 10 Vokabeln.</p>
+<button id="chooseEnDe" style="width:100%;margin-bottom:10px">🇬🇧 Englisch → Deutsch</button>
+<button id="chooseDeEn" style="width:100%">🇩🇪 Deutsch → Englisch</button>
+</div>
+<div class="q" id="questionLabel">Was bedeutet:</div>
 <div class="word" id="word">Lade Vokabel...</div>
 <div class="hearts" id="hearts">❤️❤️❤️</div>
 <div class="answers" id="answers"></div>
@@ -73,15 +79,19 @@ let state=null,batch=[],index=0,points=0,hearts=3,locked=false; let direction=lo
 function el(id){return document.getElementById(id)} function save(){localStorage.setItem("vocabKids",JSON.stringify(state))}
 function norm(x){return String(x).toLowerCase().trim().replace(/[.,!?]/g,"").replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss")}
 function shuffle(a){return a.sort(function(){return Math.random()-.5})}
+function showModeSelection(){el("modeSelect").style.display="block";el("questionLabel").style.display="none";el("word").style.display="none";el("answers").style.display="none";el("hearts").style.display="none";el("feedback").style.display="none";el("next").style.display="none";el("modeLabel").textContent="Lernrichtung auswählen";el("modeToggle").style.display="none"}
+function startSelectedRound(dir){direction=dir;roundDirection=dir;localStorage.setItem("vocabDirection",dir);el("modeSelect").style.display="none";el("questionLabel").style.display="block";el("word").style.display="block";el("answers").style.display="grid";el("hearts").style.display="block";el("feedback").style.display="block";el("modeToggle").style.display="none";startRound()}
 function startRound(){
  const errors=state.wrong.splice(0,5),count=Math.max(0,10-errors.length),fresh=getAll().slice(state.seen,state.seen+count);
  state.seen+=fresh.length; batch=errors.concat(fresh); if(batch.length===0)batch=getAll().slice(0,10);
  state.round++;index=0;points=0;hearts=3;roundDirection=direction;state.currentBatch=batch;state.currentIndex=0;state.currentPoints=0;state.currentHearts=3;save();showQuestion()
 }
 function makeChoices(correctIndex){const correct=batch[index][correctIndex];const others=[];for(const item of getAll()){const value=item[correctIndex];if(value!==correct&&others.indexOf(value)===-1)others.push(value)}shuffle(others);return shuffle(others.slice(0,3).concat([correct]))}
-function showQuestion(){locked=false;el("round").textContent="Runde "+state.round+" · "+(index+1)+"/"+batch.length;el("points").textContent="⭐ "+points;el("bar").style.width=index/batch.length*100+"%";const qIndex=roundDirection==="en-de"?0:1; const aIndex=roundDirection==="en-de"?1:0; el("word").textContent=batch[index][qIndex];el("hearts").textContent="❤️".repeat(hearts)+"🖤".repeat(3-hearts);el("feedback").textContent="";el("next").style.display="none";const box=el("answers");box.innerHTML="";makeChoices(aIndex).forEach(function(answer){const b=document.createElement("button");b.textContent=answer;b.onclick=function(){checkAnswer(answer)};box.appendChild(b)})}
+function showQuestion(){el("modeSelect").style.display="none";el("questionLabel").style.display="block";el("word").style.display="block";el("answers").style.display="grid";el("hearts").style.display="block";el("feedback").style.display="block";locked=false;el("round").textContent="Runde "+state.round+" · "+(index+1)+"/"+batch.length;el("points").textContent="⭐ "+points;el("bar").style.width=index/batch.length*100+"%";const qIndex=roundDirection==="en-de"?0:1; const aIndex=roundDirection==="en-de"?1:0; el("word").textContent=batch[index][qIndex];el("hearts").textContent="❤️".repeat(hearts)+"🖤".repeat(3-hearts);el("feedback").textContent="";el("next").style.display="none";const box=el("answers");box.innerHTML="";makeChoices(aIndex).forEach(function(answer){const b=document.createElement("button");b.textContent=answer;b.onclick=function(){checkAnswer(answer)};box.appendChild(b)})}
 function checkAnswer(answer){if(locked)return;locked=true;document.querySelectorAll("#answers button").forEach(b=>b.disabled=true);state.stats.practiced++;if(norm(answer)===norm(batch[index][aIndex])){points+=10;state.stats.correct++;el("feedback").innerHTML="🎉 Richtig! +10 ⭐"}else{hearts--;state.stats.wrong++;state.wrong.push(batch[index]);el("feedback").innerHTML="❌ Noch einmal üben!<br><b>Richtig:</b> "+batch[index][1]}state.currentBatch=batch;state.currentIndex=index;state.currentPoints=points;state.currentHearts=hearts;state.currentDirection=roundDirection;save();el("points").textContent="⭐ "+points;el("hearts").textContent="❤️".repeat(hearts)+"🖤".repeat(3-hearts);el("next").style.display="block"}
-function next(){if(index<batch.length-1){index++;state.currentIndex=index;state.currentPoints=points;state.currentHearts=hearts;save();showQuestion();return}state.currentBatch=null;state.currentIndex=0;state.currentPoints=0;state.currentHearts=3;save();el("bar").style.width="100%";el("word").textContent="🏆 Runde geschafft!";el("answers").innerHTML="";el("feedback").innerHTML="Du hast <b>"+points+" Punkte</b> gesammelt!";el("next").textContent=state.seen<getAll().length?"➡️ Nächste 10":"🔁 Fehlertraining";el("next").onclick=function(){el("next").onclick=next;startRound()}}
+function next(){if(index<batch.length-1){index++;state.currentIndex=index;state.currentPoints=points;state.currentHearts=hearts;save();showQuestion();return}state.currentBatch=null;state.currentIndex=0;state.currentPoints=0;state.currentHearts=3;save();el("bar").style.width="100%";el("word").textContent="🏆 Runde geschafft!";el("answers").innerHTML="";el("feedback").innerHTML="Du hast <b>"+points+" Punkte</b> gesammelt!";el("next").textContent=state.seen<getAll().length?"➡️ Nächste 10":"🔁 Fehlertraining";el("next").onclick=function(){el("chooseEnDe").onclick=function(){startSelectedRound("en-de")};
+el("chooseDeEn").onclick=function(){startSelectedRound("de-en")};
+el("next").onclick=next;startRound()}}
 function saveAll(){localStorage.setItem("vocabKids",JSON.stringify(state));localStorage.setItem("vocabCustom",JSON.stringify(customWords))}
 function showNotice(t){el("notice").textContent=t;el("notice").style.display="block";setTimeout(()=>el("notice").style.display="none",2500)}
 function updateStats(){const s=state.stats||{practiced:0,correct:0,wrong:0};el("statVocabulary").textContent=getAll().length;el("statPracticed").textContent=s.practiced;el("statCorrect").textContent=s.correct;el("statWrong").textContent=s.wrong;el("statRate").textContent=s.practiced?Math.round(s.correct/s.practiced*100)+" %":"0 %";el("statRounds").textContent="Runden: "+state.round}
@@ -97,7 +107,7 @@ function showQuestionOrStart(){
  if(state.currentBatch && Array.isArray(state.currentBatch) && state.currentIndex < state.currentBatch.length){
    batch=state.currentBatch; index=state.currentIndex; points=state.currentPoints||0; hearts=state.currentHearts||3; roundDirection=state.currentDirection||direction; showQuestion();
  }else{
-   startRound();
+   showModeSelection();
  }
 }
 function persistCurrent(){state.currentBatch=batch;state.currentIndex=index;state.currentPoints=points;state.currentHearts=hearts;save()}
@@ -105,7 +115,7 @@ function addCustom(en,de){en=en.trim();de=de.trim();if(!en||!de){showNotice("Bit
 el("addOne").onclick=function(){if(addCustom(el("eng").value,el("ger").value)){el("eng").value="";el("ger").value=""}}
 el("addBulk").onclick=function(){const lines=el("bulk").value.split(/\n/);let n=0;lines.forEach(line=>{const parts=line.split(/\s*=\s*/);if(parts.length>=2&&addCustom(parts[0],parts.slice(1).join("=")))n++});el("bulk").value="";if(n)showNotice(n+" Vokabel(n) hinzugefügt! 🎉")}
 el("refreshPage").onclick=function(){location.reload()};
-el("modeToggle").onclick=function(){if(index<batch.length-1){showNotice("🔒 Die Lernrichtung kann erst nach den 10 Vokabeln geändert werden.");return}direction=direction==="en-de"?"de-en":"en-de";localStorage.setItem("vocabDirection",direction);roundDirection=direction;el("modeLabel").textContent=direction==="en-de"?"Englisch 🇬🇧 → Deutsch 🇩🇪":"Deutsch 🇩🇪 → Englisch 🇬🇧";el("modeToggle").textContent=direction==="en-de"?"🔄 Deutsch → Englisch üben":"🔄 Englisch → Deutsch üben";showQuestion()};
+el("modeToggle").onclick=function(){showModeSelection()};
 el("modeLabel").textContent=direction==="en-de"?"Englisch 🇬🇧 → Deutsch 🇩🇪":"Deutsch 🇩🇪 → Englisch 🇬🇧";el("modeToggle").textContent=direction==="en-de"?"🔄 Deutsch → Englisch üben":"🔄 Englisch → Deutsch üben";
 el("adminOpen").onclick=function(){const pin=prompt("🔐 Eltern-PIN eingeben:");if(pin==="2705"){el("adminPanel").classList.add("show");renderCustom();updateStats()}else if(pin!==null)alert("❌ Falsche PIN")}
 el("adminClose").onclick=function(){el("adminPanel").classList.remove("show")}
